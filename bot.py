@@ -1,20 +1,20 @@
 import os
-from google import genai
+from groq import Groq
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
 
 async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=user_message
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": user_message}]
     )
-    await update.message.reply_text(response.text)
+    await update.message.reply_text(response.choices[0].message.content)
 
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
